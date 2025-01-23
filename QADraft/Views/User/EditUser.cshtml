@@ -1,0 +1,184 @@
+﻿@model QADraft.Models.User
+
+@{
+    ViewData["Title"] = "Edit User";
+    Layout = ViewBag.Layout;
+}
+
+<h2>Edit User</h2>
+
+<!-- Form to get updated information on the user being edited -->
+<form asp-controller="User" asp-action="EditUser" method="post">
+    <div class="form-group">
+        <label asp-for="Username" class="control-label">Username</label>
+        <input asp-for="Username" class="form-control" />
+        <span asp-validation-for="Username" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Password" class="control-label">New Password</label>
+        <input id="password-field" type="password" asp-for="Password" class="form-control" value=""/>
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Password" class="control-label">Confirm Password</label>
+        <input id="confirm-password-field" type="password" asp-for="Password" class="form-control" value=""/>
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="FirstName" class="control-label">First Name</label>
+        <input asp-for="FirstName" class="form-control" />
+        <span asp-validation-for="FirstName" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="LastName" class="control-label">Last Name</label>
+        <input asp-for="LastName" class="form-control" />
+        <span asp-validation-for="LastName" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Email" class="control-label">Email Address</label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+    
+    <div class="form-group">
+        <label asp-for="Role" class="control-label">Role</label>
+        <select asp-for="Role" class="form-control" id="natureSelect">
+            <option class="placeholder" value="" disabled selected>Select Role</option>
+            <option value="Geek">Geek</option>
+            <option value="Coordinator">Coordinator</option>
+            <option value="Admin">Admin</option>
+            <option value="Super Admin">Super Admin</option>
+            <option value="Inactive">Inactive</option>
+        </select>
+        <span asp-validation-for="Role" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="isActive" class="control-label">Currently Employed</label>
+        <input id="isActiveCheckbox" type="checkbox" asp-for="isActive" />
+        <span asp-validation-for="isActive" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Edit User" class="btn btn-primary" hidden/>
+    </div>
+</form>
+<div>
+    <button onclick="window.dialog.showModal()" class="btn buttons form-buttons">Save Changes</button>
+    <button onclick="cancel()" class="buttons form-buttons">Cancel</button>
+</div>
+
+<!-- Form to cancel and go back to Geek Accounts page -->
+<form id="cancel-form" asp-area="" asp-controller="User" asp-action="GeekAccounts" method="get">
+    <button type="submit" class="buttons form-buttons" hidden></button>
+</form>
+
+<!-- Modal Popup for confirm user edit -->
+<dialog id="dialog" class="dialog-popups">
+	<div class="confirmation-content">
+        <!-- Confirmation text -->
+        <p>Press Confirm to Edit this User's information.</p>
+        <!-- Confirmation button container -->
+        <div class="confirmation-buttons">
+            <!-- Confirmation buttons. Yes will call confirmDelete which will trigger 
+            the deleteButton input. No will close the confirmation dialog -->
+            <button class="buttons" onclick="confirmEdit()">Confirm</button> 
+            <button class="buttons buttons-accent" onclick="window.dialog.close();">No</button>
+        </div>
+    </div>
+	<button onclick="window.dialog.close();" class="x">❌</button>
+</dialog>
+
+<!-- Dynamic Modal Popup for password error messages -->
+<dialog id="dialog-password">
+	<div class="confirmation-content">
+        <!-- Dynamic text -->
+        <p id="password-error"></p>
+        <!-- Confirmation button container -->
+        <div class="confirmation-buttons">
+            <!-- Confirmation buttons. Yes will call confirmDelete which will trigger 
+            the deleteButton input. No will close the confirmation dialog -->
+            <button class="buttons" onclick="document.getElementById('dialog-password').close();">OK</button>
+        </div>
+    </div>
+    <button onclick="document.getElementById('dialog-password').close();" class="x">❌</button>
+</dialog>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Highlight the current page's link
+            var geekAccountsLink = document.getElementById('geek-accounts-link'); 
+            geekAccountsLink.classList.toggle('highlight-link');
+
+            // Change the color of the button that brings you to this page
+            var thisPageButton = document.getElementById('add-user-button');
+            thisPageButton.classList.toggle('button-for-current-page');
+        });
+
+        function confirmEdit() {
+            // Get the two password fields
+            var pass1 = document.getElementById("password-field");
+            var pass2 = document.getElementById("confirm-password-field");
+
+            // First check if the password was changed
+            if (pass1.value.trim() == "" && pass2.value.trim() == "") {
+                // Assign '-' as the password value. This value is arbitrary, any value will 
+                // work as long as it matches what is expected in the controller action. The
+                // controller will catch this value and leave the password unchanged
+                document.getElementById("password-field").value = "-";
+                // Submit the form
+                document.querySelector('input[type="submit"][value="Edit User"]').click();
+                return false;
+            }
+            // If either were changed, do password validation
+            if (pass1.value == pass2.value) {
+                // If they match, do password validation
+                password = document.getElementById("password-field").value.trim();
+                if (password.length < 8) {
+                    displayModal("Password must be at least 8 characters long.");
+                }
+                else if (!/[A-Z]/.test(password)){
+                    displayModal("Password must contain at least one uppercase letter.");
+                }
+                else if (!/[^A-Za-z0-9]/.test(password)) {
+                    displayModal("Password must contain at least one special character.");
+                }
+                else if (!/\d/.test(password)) {
+                    displayModal("Password must contain at least one numeric character.");
+                }
+                else {
+                    // Otherwise, password meets criteria, proceed with form submission
+                    document.querySelector('input[type="submit"][value="Edit User"]').click();
+                }
+            }
+            else {
+                console.log('else');
+                // If the passwords are different, clear the password fields
+                pass1.value = "";
+                pass2.value = "";
+                
+                // display an error
+                displayModal("Password must match");
+            }
+        }
+
+        function displayModal(message) {
+            // Close the first modal
+            document.getElementById('dialog').close();
+            // Set the text of the modal to the message string
+            document.getElementById("password-error").innerHTML = message;
+            // Show the popup
+            document.getElementById('dialog-password').showModal();
+
+        }
+
+        function cancel()
+        {
+            var cancelForm = document.getElementById("cancel-form");
+
+            cancelForm.submit();
+        }
+
+    </script>
+}

@@ -1,0 +1,36 @@
+﻿@model User
+
+@{
+    ViewData["Title"] = "Themes";
+    Layout = ViewBag.Layout;
+}
+<h1>Themes</h1>
+<div class="themes-container">
+    <div class="themes-divider">
+        <img class="theme-images" src="~/images/defaultThemeIcon.png">
+
+        <form id="form-items" asp-action="UserThemes" method="post">
+            <input type="hidden" asp-for="Id" value="@Context.Session.GetInt32("Id")" />
+            <input type="hidden" asp-for="Theme" value="default" />
+            <input type="submit" class="buttons" value="Apply Default Theme" />
+        </form>
+    </div>
+
+    <div class="themes-divider">
+        <img class="theme-images" src="~/images/darkThemeIcon.png">
+
+        <form id="form-items" asp-action="UserThemes" method="post">
+            <input type="hidden" asp-for="Id" value="@Context.Session.GetInt32("Id")" />
+            <input type="hidden" asp-for="Theme" value="dark" />
+            <input type="submit" class="buttons" value="Apply Dark Theme" />
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var userTheme = '@Context.Session.GetString("Theme")';
+
+        applyTheme(userTheme);
+    });
+</script>

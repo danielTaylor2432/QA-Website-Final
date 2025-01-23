@@ -1,0 +1,246 @@
+﻿@* Define the model being used in the page. Uses a list of GeekQAs *@
+@model List<QADraft.Models.GeekQA>
+
+@{
+    ViewData["Title"] = "Filter QAs";
+    Layout = ViewBag.Layout;
+    string menu = ViewBag.menu;
+}
+
+@Html.Partial(@menu)
+<h2>Your QAs</h2>
+
+<!-- Place the filter options within a div -->
+<div class="filter-section">
+    <button class="buttons" onclick="showFiltersModal()">Filter</button>
+    <button type="button" class="buttons" onclick="resetFilters()">Reset Filters</button>
+    
+</div>
+
+<!-- Place the QA table under the filter options-->
+<table class="table-your-qas" id="table">
+    <!-- Create the table headers-->
+    <thead>
+        <tr>
+            <!-- sortTable(x) calls the javascript function from _ReportsMenu to sort 
+            by the specified column where x is the column index. The class "arrow" is 
+            used by the function to edit the column header -->
+            <th onclick="sortTable(0)">Category<span class="arrow"></th>
+            <th onclick="sortTable(1)">Nature<span class="arrow"></th>
+            <th onclick="sortTable(2)">Severity<span class="arrow"></th>
+            <th onclick="sortTable(3)">Commited On<span class="arrow"></th>
+            <th onclick="sortTable(4)">Found On<span class="arrow"></th>
+            <th>Details</th>
+        </tr>
+    </thead>
+    <!-- Create the table body -->
+    <tbody>
+        <!-- Verify that the Model exists and is not null -->
+        @if (Model != null)
+        {
+            @* If it exists, then populate the table *@
+            @foreach (var qa in Model.OrderByDescending(q => q.ErrorDate))
+            {
+                @* Add each QA in the list of GeekQAs in its own table row *@
+                <tr>
+                    @* Insert the data from the model *@
+                    <td>@qa.CategoryOfError</td>
+                    <td>@qa.NatureOfError</td>
+                    <td class="severity-cell" data-severity="@qa.Severity"><span class="severity-span">@qa.Severity</span></td>
+                    <td>@qa.ErrorDate.ToString("yyyy-MM-dd")</td>
+                    <td>@qa.FoundOn.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        <button id="description-button" class="buttons" onclick="showDetailsModal('@qa.CustomerName', '@qa.UnitId', '@qa.Description');">
+                            <img id="description-icon" src="~/images/descriptionIconWhite.png" alt="Details" />
+                        </button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<dialog id="filter-your-qas-dialog" class="dialog-popups">
+	<div class="confirmation-content">
+        <h2>Filters<h2>
+        <!-- Confirmation button container -->
+
+        <!-- Create the form element and assign the controller and action -->
+        <form id="filterForm" method="get" asp-controller="QA" asp-action="YourQAs">
+            <!-- Create div to contain the date selection elements -->
+            <div class="form-group">
+                <!-- Checkbox that toggles the visibility of the date selection elements -->
+                <input type="hidden" id="dateFilter" name="dateFilter">
+                <!-- Container for the date picking elements -->
+                <div id="datePickers">
+                    <label class="popup-labels" for="startDate">Start Date</label>
+                    <input class="form-control" type="date" id="startDate" name="startDate" onchange="changeStartDate()">
+                    <label class="popup-labels" for="endDate">End Date</label>
+                    <input class="form-control" type="date" id="endDate" name="endDate" onchange="changeEndDate()">
+                </div>
+            </div>
+            <!-- Create div to contain the Category elements -->
+            <div class="form-group">
+                <!-- Label for Category -->
+                <label class="popup-labels" for="category">Category</label>
+                <!-- Create the dropdown selection for Category-->
+                <select id="category" name="category" class="form-control">
+                    <option value="">Any Category</option>
+                    <!-- Populate the dropdown with categories list passed through the ViewBag -->
+                    @foreach (var category in ViewBag.Categories)
+                    {
+                        @* For each category, add it as a selection option *@
+                        <option value="@category.Value">@category.Text</option>
+                    }
+                </select>
+                <label class="popup-labels" for="severity">Severity</label>
+                <select id="severity" name="severity" class="form-control">
+                    <option value="">Any</option>
+                    @for (int i = 1; i <= 10; i++)
+                    {
+                        <option value="@i">@i</option>
+                    }
+                </select>
+            </div>
+            <!-- Create div to contain submission buttons -->
+            <div class="confirmation-buttons">
+                <button id="confirm-delete-event-button" class="buttons" type="submit">Apply</button> 
+                <button id="cancel-delete-event-button" class="buttons buttons-accent" onclick="closeDialog();">Cancel</button>
+            </div>
+        </form>
+    </div>
+	<button onclick="window.dialog.close();" class="x">❌</button>
+</dialog>
+
+<!-- Modal Popup for details -->
+<dialog id="dialog-details" class="dialog-popups">
+	<div class="confirmation-content">
+        <div class="form-group">
+            <label class="popup-labels">Customer</label>
+            <p id='customer-name-output'></p>
+        </div>
+        <div class="form-group">
+            <label class="popup-labels">Unit ID</label>
+            <p id='unit-id-output'></p>
+        </div>
+        <div class="form-group">
+            <label class="popup-labels">Description</label>
+            <p id='description-output'></p>
+        </div>
+        <!-- Confirmation button container -->
+        <div class="confirmation-buttons">
+            <!-- Confirmation buttons. Yes will call confirmDelete which will trigger 
+            the deleteButton input. No will close the confirmation dialog -->
+            <button id="cancel-delete-event-button" class="buttons" onclick="closeDetailsModal();">Close</button>
+        </div>
+    </div>
+	<button onclick="closeDetailsModal();" class="x">❌</button>
+</dialog>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+                // Highlight the current page's link
+                var qaMenuLink = document.getElementById('qa-menu-link'); 
+                qaMenuLink.classList.toggle('highlight-link');
+
+                // Change the color of the button that brings you to this page
+                var thisPageButton = document.getElementById('your-qas-button');
+                thisPageButton.classList.toggle('button-for-current-page');
+        });
+
+        function toggleDatePicker(checkbox) {
+            console.log("Toggle Date Picker: ", checkbox.checked); // Debug output
+            var datePickers = document.getElementById("datePickers");
+            datePickers.style.display = checkbox.checked ? "block" : "none";
+        }
+
+        function resetFilters() {
+            // Create a new form element
+            const form = document.createElement('form');
+
+            // Set the action attribute to "Filter"
+            form.setAttribute('asp-action', 'YourQAs');
+
+            // Optionally, set other attributes if needed, e.g., method="GET" or method="POST"
+            form.setAttribute('method', 'GET');
+
+            // Append the form to the document body (or any other desired location)
+            document.body.appendChild(form);
+
+            // Immediately submit the form
+            form.submit();
+        }
+ 
+        function changeStartDate() {
+            var dateFilter = document.getElementById("dateFilter");
+
+            dateFilter.value = "on";
+        }
+
+        function changeEndDate() {
+            var startDate = document.getElementById("startDate");
+            var endDate = document.getElementById("endDate");
+            var dateFilter = document.getElementById("dateFilter");
+
+            var startDateFormat = new Date(startDate.value);
+            var endDateFormat = new Date(endDate.value);
+
+
+            if (endDateFormat < startDateFormat)
+            {
+                endDate.value = startDate.value;
+            }
+
+            dateFilter.value = "on";
+            console.log(dateFilter);
+        }
+
+        function showFiltersModal() {
+            // Get the correct form to be submitted
+            var parentForm = event.target.closest('form');
+            window.currentForm = parentForm;
+            // Default the end date to todays date
+            var endDate = document.getElementById("endDate").valueAsDate = new Date();
+            // Show the modal
+            const dialogFilters = document.getElementById('filter-your-qas-dialog');
+            dialogFilters.showModal();
+        }
+
+        function closeDialog() {
+            event.preventDefault(); // Prevent default action
+
+            const filterDialog = document.getElementById('filter-your-qas-dialog');
+            filterDialog.close();
+        }
+
+        function showDetailsModal(customerName, unitId, description) {
+            const dialogDetails = document.getElementById('dialog-details');
+
+            var customerNameOutput = document.getElementById('customer-name-output');
+            var unitIdOutput = document.getElementById('unit-id-output');
+            var descriptionOutput = document.getElementById('description-output');
+
+            customerNameOutput.textContent = customerName;
+            unitIdOutput.textContent = unitId;
+            descriptionOutput.textContent = description;
+
+            dialogDetails.showModal();
+        }
+
+        function closeDetailsModal() {
+            const dialogDetails = document.getElementById('dialog-details');
+            dialogDetails.close();
+        }
+
+        
+    </script>
+}
+<!--
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+-->
+

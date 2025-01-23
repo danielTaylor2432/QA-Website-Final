@@ -1,0 +1,206 @@
+﻿@{
+    var categoryDict = ViewBag.categoryDict as Dictionary<string, int>;
+    var natureDict = ViewBag.natureDict as Dictionary<string, int>;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donut to Bar Chart Conversion</title>
+    <script src="~/js/NatureMap.js"></script>
+</head>
+<body>
+    <button id="categoryBtn" onclick="call('category')" class="buttons form-buttons">Category</button>
+    <button id="natureBtn" onclick="call('nature')" class="buttons form-buttons">Nature</button>
+    <button onclick="call('Snipe-It')" class="buttons form-buttons">Snipe-It</button>
+    <button onclick="call('DocuSign')" class="buttons form-buttons">DocuSign</button>
+    <button onclick="call('Processes')" class="buttons form-buttons">Processes</button>
+    <button onclick="call('Desk Conduct')" class="buttons form-buttons">Desk Conduct</button>
+    <button onclick="call('Other')" class="buttons form-buttons">Other</button>
+    <h1 id="chartDesc">Category</h1>
+
+    <!-- Load d3.js -->
+    <script src="https://d3js.org/d3.v6.js"></script>
+
+    <div id="container-barchart"></div>
+
+    <script>
+       
+        // set the dimensions and margins of the graph
+        const margin = { top: 30, right: 30, bottom: 70, left: 60 },
+            width = 600 - margin.left - margin.right,
+            height = 400 - margin.top - margin.bottom;
+
+        // append the svg object to the div called 'container-barchart'
+        const svg = d3.select("#container-barchart")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        function call(type) {
+            let data = {}; // To store the current data
+            let title = document.getElementById('chartDesc');
+
+            if (type === 'category') {
+                data = @Html.Raw(Json.Serialize(categoryDict));
+                title.innerText = "Category";
+            } else if (type === 'nature') {
+                data = @Html.Raw(Json.Serialize(natureDict));
+                title.innerText = "Nature";
+            } else {
+                // Get data of all natures
+                init_data = @Html.Raw(Json.Serialize(natureDict));
+
+                // Initialize an object to store the structured data
+                data = {};
+
+                // Use the natureMapping to grab only those natures where category is equal to type
+                Object.keys(init_data).forEach(description => {
+                    const count = init_data[description];
+                    const entry = natureMapping.find(item => item.nature === description && item.categories.includes(type));
+                    if (entry) {
+                        data[description] = count; // Get the count of each nature
+                    }
+                });
+
+                title.innerText = type;
+            }
+
+            
+            // Sort the data descending
+            var dataSorted = Object.keys(data).map(function(key) {
+              return [key, data[key]];
+            });
+
+            // Sort the array based on the second element
+            dataSorted.sort(function(first, second) {
+              return second[1] - first[1];
+            });
+            
+            update(data, title.innerText); // Pass title text to update function
+        }
+
+        function update(data, axisTitle) {
+            const keys = Object.keys(data);
+            const values = Object.values(data);
+
+            // Bubble sort the data descending
+            for (var i = 0; i < values.length; i++) {
+                for (var j = 0; j < values.length - i - 1; j++) {
+                    if (values[j] < values[j+1]) {
+                        // Swap keys
+                        var keyTemp = keys[j];
+                        keys[j] = keys[j+1];
+                        keys[j+1] = keyTemp;
+
+                        // Swap values
+                        var valuesTemp = values[j];
+                        values[j] = values[j+1];
+                        values[j+1] = valuesTemp;
+                    }
+                }
+            }
+
+            // X scale
+            const x = d3.scaleBand()
+                .domain(keys)
+                .range([0, width])
+                .padding(0.1);
+
+            // Y scale
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(values)])
+                .nice()
+                .range([height, 0]);
+
+            // Define a color scale with a predefined color scheme
+            const colorScale = d3.scaleOrdinal()
+                .domain(keys) // Assuming keys are unique descriptions/natures
+                .range(d3.schemeCategory10); // You can use any color scheme, like schemeCategory10
+
+            // Calculate tick values dynamically
+            const maxY = d3.max(values);
+            const tickValues = d3.range(0, maxY + 1); // Generate an array of ticks from 0 to maxY
+
+            // Update bars
+            const bars = svg.selectAll(".bar")
+                .data(keys);
+
+            // Exit old bars
+            bars.exit()
+                .transition()
+                .duration(500)
+                .attr("height", 0) // Scale height to zero
+                .attr("y", height) // Move bars to the bottom of the chart
+                .style("opacity", 0) // Fade out bars
+                .remove();
+
+            bars.enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", d => x(d))
+                .attr("width", x.bandwidth() * 0.8) // Adjust the width of the bars here
+                .attr("y", height)
+                .attr("height", d => height - y(data[d]))
+                .attr("height", 0) // Start with zero height
+                .attr("fill", d => colorScale(d)) // Assign color
+                .merge(bars)
+                .transition()
+                .duration(1000)
+                .attr("x", d => x(d) + x.bandwidth() * 0.1)
+                .attr("y", d => y(data[d]))
+                .attr("width", x.bandwidth() * 0.8) // Adjust the width of the bars here
+                .attr("height", d => height - y(data[d]));
+
+
+
+            // Update x-axis
+            svg.select(".x-axis").remove();
+            svg.append("g")
+                .attr("class", "x-axis")
+                .attr("transform", `translate(0, ${height})`)
+                .call(d3.axisBottom(x))
+                .selectAll("text")
+                .style("text-anchor", "end")
+                .attr("dx", "-.8em")
+                .attr("dy", ".15em")
+                .attr("transform", "rotate(-45)")
+                .style("font-size", "12px"); // Adjust font size of x-axis labels
+
+            // Update y-axis
+            svg.select(".y-axis").remove();
+            svg.append("g")
+                .attr("class", "y-axis")
+                .call(d3.axisLeft(y).tickValues(tickValues).tickFormat(d3.format("d"))) // Specify unique whole number ticks
+                .selectAll("text")
+                .style("font-size", "12px"); // Adjust font size of y-axis labels
+
+            // Add X axis label
+            svg.select(".x-axis-title").remove();
+            svg.append("text")
+                .attr("class", "x-axis-title")
+                .attr("text-anchor", "middle")
+                .attr("x", width / 2)
+                .attr("y", height + margin.bottom - 10) // Adjust this value to position the title correctly
+                .text(axisTitle) // Use the dynamic title
+                .style("font-size", "16px"); // Adjust font size of x-axis title
+
+            // Add Y axis label
+            svg.select(".y-axis-title").remove();
+            svg.append("text")
+                .attr("class", "y-axis-title")
+                .attr("text-anchor", "middle")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -margin.left + 20)
+                .attr("x", -margin.top - height / 2)
+                .text("Number of QAs") // Replace with your y-axis title
+                .style("font-size", "16px"); // Adjust font size of y-axis title
+        }
+
+        call('category'); // Initial call to display category chart
+
+    </script>
+</body>
+</html>

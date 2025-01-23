@@ -1,0 +1,268 @@
+﻿<h1>Reports Menu</h1>
+
+<div id="menu-bar">
+    <a id="your-qas-button" class="buttons" asp-area="" asp-controller="QA" asp-action="YourQAs">Your QAs</a>
+    <a id="filter-qas-button" class="buttons" asp-area="" asp-controller="QA" asp-action="Filter">Filter</a>
+    <a id="all-geek-qas-button" class="buttons" asp-area="" asp-controller="QA" asp-action="AllGeekQAs">All Geek QAs</a>
+    <a id="qa-descriptions-button" class="buttons" asp-area="" asp-controller="QA" asp-action="QADescriptions">QA Descriptions</a>
+</div>
+
+<script>
+    //table sorting
+    function sortTable(n) {
+        var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+        table = document.getElementById("table");
+        switching = true;
+            
+        // Set the sorting direction to ascending:
+        dir = "asc";
+            
+            
+        //loop until end is reached
+        while (switching) {
+            // assume sorted
+            switching = false;
+            rows = table.rows;
+
+            // Loop through all rows
+            for (i = 1; i < (rows.length - 1); i++) {
+                // assume no switching:
+                shouldSwitch = false;
+
+                // Get the current and next row
+                x = rows[i].getElementsByTagName("TD")[n];
+                y = rows[i + 1].getElementsByTagName("TD")[n];
+
+                let xContent = x.innerHTML.trim();
+                let yContent = y.innerHTML.trim();
+
+                // Check if column content is numeric
+                let xVal = isNaN(xContent) ? xContent.toLowerCase() : parseFloat(xContent);
+                let yVal = isNaN(yContent) ? yContent.toLowerCase() : parseFloat(yContent);
+
+                // Check if they should switch
+                if (dir == "asc") {
+                    if (xVal > yVal) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                } 
+                else if (dir == "desc") {
+                    if (xVal < yVal) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+            }
+
+            if (shouldSwitch) {
+                /* If a switch has been marked, make the switch
+                and mark that a switch has been done: */
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                // Each time a switch is done, increase this count by 1:
+                switchcount ++;
+                applySeverityColors();
+            } 
+            else {
+                /* If no switching has been done AND the direction is "asc",
+                set the direction to "desc" and run the while loop again. */
+                if (switchcount == 0 && dir == "asc") {
+                    dir = "desc";
+                    switching = true;
+                }
+            }
+
+        }
+
+        console.log("start arrows");
+
+        // Reset all arrows
+        let headers = table.getElementsByTagName("TH");
+        console.log(headers.length);
+        for (let header of headers) {
+            let arrow = header.querySelector(".arrow");
+            if (arrow) {
+                arrow.innerHTML = "";
+            }
+        }
+        console.log("reset arrows");
+        // Add arrow to the current sorted column
+        if (dir == "asc") {
+            console.log("asc");
+            headers[n].querySelector(".arrow").innerHTML = "▲";
+        } else {
+            console.log("desc");
+            headers[n].querySelector(".arrow").innerHTML = "▼";
+        }
+
+        // Toggle the direction for the next click
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+
+        console.log("end");
+
+    }
+
+    function getSeverityColor(severity)
+    {
+        let color = "";
+
+        switch (severity)
+        {
+            /*
+            case '1':
+                color = "#00FF00 ";
+                break;
+            case '2':
+                color = "#33FF00";
+                break;
+            case '3':
+                color = "#66FF00";
+                break;
+            case '4':
+                color = "#99FF00";
+                break;
+            case '5':
+                color = "#CCFF00";
+                break;
+            case '6':
+                color = "#CCFF00";
+                break;
+            case '7':
+                color = "#FFCC00";
+                break;
+            case '8':
+                color = "#FF9900";
+                break;
+            case '9':
+                color = "#FF6600";
+                break;
+            case '10':
+                color = "#FF0000";
+                break;
+            default:
+                // should never reach this case
+                color = "#fff";
+                break;
+            */
+
+            case '1': 
+            case '2':
+            case '3':
+                color = "#00CC00";
+                break;
+            case '4':
+            case '5':
+                color = "#ffe803";
+                break;
+            case '6':
+            case '7':
+            case '8': 
+                color = "#FF9900";
+                break;
+            case '9':
+            case '10':
+                color = "#FF0000";
+                break;
+            default:
+                // should never reach this case
+                color = "#FFF";
+                break;
+
+
+        }
+        return color;
+    }
+        
+
+    function applySeverityColors() {
+        var severityCells = document.querySelectorAll('td[data-severity]');
+
+        severityCells.forEach(function(cell, index) {
+            var severity = cell.getAttribute('data-severity');
+            var severityColor = getSeverityColor(severity);
+            var backgroundColor = '#000';
+
+            var userTheme = '@Context.Session.GetString("Theme")';
+
+            var trElement = cell.parentNode;
+            var computedStyle = window.getComputedStyle(trElement);
+            backgroundColor = computedStyle.backgroundColor;
+
+        
+            /*
+            if (index % 2 === 0) 
+            {
+                if (userTheme === "dark")
+                    {
+                        backgroundColor = '#2c2c2c'
+                    }
+                    else
+                    {
+                        backgroundColor = '#f5f5f5';
+                    }
+            } 
+            else 
+            {
+                if (userTheme === "dark")
+                {
+                    backgroundColor = '#3b3b3b';
+                }
+                else
+                {
+                    backgroundColor = '#eaeaea';
+                }
+            }
+            /*
+
+
+
+            // Color the whole cell
+            //cell.style.backgroundColor = severityColor;
+
+            // Color the border of the cell
+            //cell.style.border = `2px solid ${severityColor}`;
+
+            // Style a span
+            /*
+            var span = cell.querySelector('.severity-span');
+            if (span) {
+                span.style.backgroundColor = severityColor;
+            }
+            */
+
+            // Simple radial gradient
+            //cell.style.background = `radial-gradient(circle, ${severityColor} 10%, rgba(255,255,255,0) 50%, ${backgroundColor} 100%)`;
+
+            // Hollow radial gradient
+            cell.style.background = `radial-gradient(circle, rgba(255,255,255,0) 20%, ${severityColor} 40%,  ${backgroundColor} 45%)`;
+
+            if (userTheme === "dark")
+            {
+                cell.style.borderBottom = '1px solid #000';
+            }
+            else
+            {
+                cell.style.borderBottom = '1px solid #aaaaaa';
+            }
+        
+    });
+
+    var severitySpans = document.querySelectorAll('.severity-span');
+
+        severitySpans.forEach(function(span)
+        {
+            var spanContent = span.textContent;
+
+            if (spanContent == "10")
+            {
+                span.style.left = "24%";
+            }
+        });
+}
+
+    document.addEventListener('DOMContentLoaded', function() {
+        applySeverityColors();
+    });
+
+</script>
