@@ -13,24 +13,85 @@
     <button class="buttons tablinks" onclick="changeTab(event, 'Mass Update')">Mass Update</button>
 </div>
 
+<!-- Checkout page content-->
 <div id="Checkout" class="tabcontent">
     <div class="checkout-row">
         <h1>Checkout</h1>
         <div>
             <label>Enter the customer's EKU ID</label>
-            <input type="text" id="eku-id" class="form-control">
-                
+            <input type="number" id="eku-id" maxLength="9" class="form-control" oninput="validate_eku_id();" style="background: lightcoral;">   
         </div>
         <div>
             <label>Asset tag to Checkout</label>
-            <input type="text" id="asset-tag" class="form-control">
+            <input type="text" id="asset-tag" class="form-control" oninput="validate_asset_tag();" style="background: lightcoral;">
+        </div>
+        <div>
+            <label>Due date:</label>
+            <input type="date" id="due-date" class="form-control">
         </div>
     </div>
-    <div class="">
-        <label>Due date:</label>
-        <input type="date" id="due-date" class="form-control">
+    @* Button to open user-confirmation modal *@
+    <button type="button" class="buttons" data-bs-toggle="modal" data-bs-target="#user-confirmation-modal">Checkout</button>
+
+    @* Handle checkout logic *@
+    <script>
+        function validate_eku_id() {
+            const input = document.getElementById("eku-id");
+            let value = input.value;
+
+            if (value.length > 9) {
+                input.value = value.slice(0, 9);
+                value = input.value
+            }
+
+            if (value.length === 9 && ( value.startsWith("900") || value.startsWith("901") ) ) {
+                input.style.background = "darkseagreen";
+            }
+            else {
+                input.style.background = "lightcoral";
+            }
+        }
+
+        function validate_asset_tag() {
+            const input = document.getElementById("asset-tag");
+            let value = input.value;
+            // Convert the input to uppercase
+            value = value.toUpperCase();
+            input.value = value;
+
+            // There's not as clean of a number as for the eku id, but they should all be at least 5 characters
+            if (value.length >= 5) {
+                input.style.background = "darkseagreen";
+            }
+            else {
+                input.style.background = "lightcoral";
+            }
+        }
+
+        function handle_checkout() {
+            
+        }
+    </script>
+
+    <!-- User Confirmation Modal -->
+    <div class="modal fade" id="user-confirmation-modal" tabindex="-1" aria-labelledby="user-confirmation-modal" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Confirm User</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
+          </div>
+          <div class="modal-body">
+            ...
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Save changes</button>
+          </div>
+        </div>
+      </div>
     </div>
-    <input type="button" value="Checkout" class="buttons" id="checkout-btn">
+
 </div>
 
 <div id="User Assets" class="tabcontent">
@@ -66,57 +127,7 @@
     </div>
 </div>
 
-@* Modal popup for user confirmation *@
-<div id="modal-user-confirmation" class="dialog-popups">
-    <div class="modal-header">
-        Header
-        <button id="close-user-confirmation">❌</button>
-    </div>
-    <div class="modal-content">
-        Content
-    </div>
-</div>
 
-<script>
-    var modal = document.getElementById("modal-user-confirmation");
-    var btn = document.getElementById("checkout-btn");
-    var btn-close = document.getElementById("close-user-confirmation");
-    btn.onclick = function() {
-        modal.style.display = "block";
-    }
-    btn-close.onclick = function() {
-        modal.style.display = "none";
-    }
-    window.onclick = function(event) {
-      if (event.target == modal) {
-        modal.style.display = "none";
-      }
-    }
-</script>
-
-
-
-<dialog id="dialog-user-confirmation" class="dialog-popups">
-    <div class="confirmation-content">
-        <!-- Confirmation text -->
-        <h2>Edit Event<h2>
-        <form id="edit-event-form" asp-controller="Event" asp-action="EditEvent" method="post">
-            <div class="form-group">
-                <label class="control-label popup-labels">Event Time</label>
-                <input name="EventTime" class="form-control" type="datetime-local" id="edit-event-time-input" />
-            </div>
-            
-        </form>
-        <!-- Confirmation button container -->
-        <div class="confirmation-buttons">
-            <!-- Confirmation buttons. Yes will call confirmDelete which will trigger 
-            the deleteButton input. No will close the confirmation dialog -->
-            <button id="confirm-edit-event-button" type="button" class="buttons" onclick="editEvent()">Confirm Edits</button> 
-            <button id="cancel-edit-event-button" type="button" class="buttons buttons-accent" onclick="closeEditEventModal()">Cancel</button>
-        </div>
-    </div>
-	<button onclick="document.getElementById('dialog-edit-event').close();" class="x">❌</button>
-</dialog>
 
 
 @section Scripts {
