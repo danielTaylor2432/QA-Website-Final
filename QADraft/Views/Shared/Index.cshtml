@@ -1,0 +1,157 @@
+﻿@* @model QADraft.Models.Events
+
+@{
+    ViewData["Title"] = "Home Page";
+    Layout = ViewBag.Layout;
+}
+
+<style>
+    /* Styles for the main element of the page */
+    .dashboard {
+        background: #f5f5f5; /* off white */
+    }
+
+    .dashboard::after {
+        content: "";
+        clear: both;
+    }
+
+    .dashboard-button {
+        width: 45%; /* Adjust width as needed */
+        margin: 0 5px; /* Add some spacing between items */
+        float: left; /* Float items to the left */
+    }
+
+    .calendar {
+        width: 45%; /* Adjust width as needed */
+        margin: 0 5px; /* Add some spacing between items */
+        float: left; /* Float items to the left */
+    }
+
+    .dashboard-buttons .dash-button {
+        background-color: #861F41; /* EKU Maroon */
+        color: white;
+        margin: 15px;
+        width: 200px;
+        height: 200px;
+        border-radius: 15px;
+    }
+
+    /* Styles for the link-bar container */
+    .link-container {
+        display: flex;
+        position: relative;
+    }
+
+    /* Styles for the external links bar (vertical bar on the left) */
+    .link-bar {
+        background-color: #fff;
+        border-right: 3px groove black;
+        height: 100vh;
+        width: 80px;
+        position: fixed;
+        top: 80px;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        z-index: 0;
+    }
+
+    /* Styles for the links */
+    .link-bar a img {
+        display: flex;
+        margin-top: 40px;
+        max-height: 30px;
+        max-width: 40px;
+    }
+</style>
+
+<div class="text-center">
+    <h1 class="display-4">Welcome, @Context.Session.GetString("FirstName")!</h1>
+</div>
+
+<div class="link-container">
+    <div class="link-bar">
+        <a class="link" title="Argos" href="https://argosp.eku.edu/Argos/AWV/#explorer/Geeks/Equipment%20Checkout" target="_blank"><img src="~/images/argosLogo.png" alt="Argos"></a>
+        <a class="link" title="Asana" href="https://app.asana.com/-/login?_gl=1*lpkqvz*_ga*MjM4ODA2MDE5LjE3MTY0NzUyMjQ.*_ga_J1KDXMCQTH*MTcxNjQ3NTIyNC4xLjEuMTcxNjQ3NTIyNC42MC4wLjEwNTc1MjYwMTA.*_fplc*bjdDRk1QMTklMkZaaXpyMlo4NUkwaVVBcFRxWW5aQzFySXQ5JTJCaUo1QjFTOGdiWDNOSUhUMUMlMkJ1d1htb3NqNks2WmtkaG51ZVBuTjViQzFtUXoxRzhsUzlpMDZRVnY4b0JTTnFYYnBIaklwRlFBcUpBS3MxdnZXNTJjNVZta1V3JTNEJTNE" target="_blank"><img src="~/images/asanaLogo.png" alt="Asana"></a>
+        <a class="link" title="Docusign" href="https://account.docusign.com/oauth/auth?response_type=code&scope=all%20click.manage%20me_profile%20room_forms%20room_fields%20inproductcommunication_read%20data_explorer_signing_insights%20notary_read%20notary_write%20search_read%20search_write%20webforms_manage%20dtr%20valmod_manage%20signature&client_id=2CC56DC9-4BCD-4B55-8AB0-8BA60BAE1065&redirect_uri=https%3A%2F%2Fapps.docusign.com%2Fauthenticate&state=%7B%22widgetId%22%3A%22%40ds%2Fsend%22%2C%22xsrfToken%22%3A%22tKVf99o%2B5aaZ0d%2Bc8bp%2B%2B5D9h0qXk3IZT799yTuMknkDgNACnVPzjWynA8zxlH%2FKIcVY2vtAfu6vzo%2BvLGg8avfd%2FKn379N4HWJwxhDyHT9prk2TNzaSpmqvqllpphw7fvcWONPy47J216fgi2XsYgvYUXDY07kT4oYZGwDU6ks%3D%22%2C%22redirectUri%22%3A%22%2Fsend%22%7D" target="_blank"><img src="~/images/docusignLogo.png" alt="Docusign"></a>
+        <a class="link" title="Google Drive" href="https://www.google.com/intl/en-US/drive/" target="_blank"><img src="~/images/driveLogo.png" alt="Google Drive"></a>
+        <a class="link" title="EKU myMail" href="https://it.eku.edu/mso365" target="_blank"><img src="~/images/mymailLogo.png" alt="myMail"></a>
+        <a class="link" title="Snipe-IT" href="https://itservice6.eku.edu/login" target="_blank"><img src="~/images/snipeitLogo.png" alt="Snipe-IT"></a>
+    </div>
+</div>
+
+<div class="dashboard-buttons">
+    <div>
+        <button class="dash-button">Button1</button>
+        <button class="dash-button">Button2</button>
+    </div>
+    <div>
+        <button class="dash-button">Button3</button>
+        <button class="dash-button">Button4</button>
+    </div>
+</div>
+
+<div class="calendar">
+    <p>Event Calendar</p>
+    <textarea id="eventCalendar" rows="15" cols="50" style="resize: none; width: 100%;" readonly>
+
+    </textarea>
+</div>
+
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEventModal">
+    Add New Event
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="addEventModal" tabindex="-1" aria-labelledby="addEventModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addEventModalLabel">Add New Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Form that posts to the EventController's AddEvent action -->
+                <form asp-controller="Event" asp-action="AddEvent" method="post">
+                    <div class="form-group">
+                        <label asp-for="EventTime" class="control-label">Event Time</label>
+                        <input asp-for="EventTime" class="form-control" type="datetime-local" />
+                        <span asp-validation-for="EventTime" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="EventInformation" class="control-label">Event Information</label>
+                        <input asp-for="EventInformation" class="form-control" placeholder="Enter Event Info" />
+                        <span asp-validation-for="EventInformation" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Event</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table class
+<table class="table">
+    <thead>
+        <tr>
+            <th>Event Time</th>
+            <th>Event Information</th>
+        </tr>
+    </thead>
+</table>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <!-- Include necessary scripts specific to this view -->
+    <!-- JQuery and Bootstrap JS from CDN -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+}
+ *@

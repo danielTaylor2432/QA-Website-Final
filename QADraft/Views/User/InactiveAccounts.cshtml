@@ -1,0 +1,57 @@
+﻿@model List<QADraft.Models.User>
+
+@{
+    ViewData["Title"] = "Inactive Accounts";
+    Layout = ViewBag.Layout;
+}
+
+<partial name="_GeeksMenu" />
+<h2>Geek Accounts</h2>
+
+<!-- Table to output a list off all users -->
+<table id="table" class="table-qa">
+    <thead>
+        <tr>
+            <th onclick="sortTable(0)">Username<span class="arrow"></th>
+            <th onclick="sortTable(1)">First Name<span class="arrow"></th>
+            <th onclick="sortTable(2)">Last Name<span class="arrow"></th>
+            <th onclick="sortTable(3)">Email<span class="arrow"></th>
+            <th onclick="sortTable(4)">Role<span class="arrow"></th>
+            <th onclick="sortTable(5)">Created <span class="arrow"></th>
+            <th onclick="sortTable(6)">Employed<span class="arrow"></th>
+            <th class="noSort">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var qa in Model)
+        {
+            if (! @qa.isActive)
+            {
+                <tr>
+                    <td>@qa.Username</td>
+                    <td>@qa.FirstName</td>
+                    <td>@qa.LastName</td>
+                    <td>@qa.Email</td>
+                    <td>@qa.Role</td>
+                    <td>@qa.CreatedAt.ToString("yyyy-MM-dd")</td>
+                    <td>@qa.isActive</td>
+                    <td>
+                        <a class="buttons" asp-area="" asp-controller="User" asp-action="EditUser" asp-route-Id="@qa.Id">Edit</a>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Highlight the current page's link
+        var geekAccountsLink = document.getElementById('geek-accounts-link'); 
+        geekAccountsLink.classList.toggle('highlight-link');
+
+        // Change the color of the button that brings you to this page
+            var thisPageButton = document.getElementById('inactive-accounts-button');
+            thisPageButton.classList.toggle('button-for-current-page');
+    });
+</script>

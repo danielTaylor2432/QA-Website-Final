@@ -1,0 +1,176 @@
+﻿@model List<QADraft.Models.User>
+
+@{
+    ViewData["Title"] = "Geek Accounts";
+    Layout = ViewBag.Layout;
+    string userRole = ViewBag.role;
+}
+
+<partial name="_GeeksMenu" />
+<h2>Geek Accounts</h2>
+
+<!-- Table to output a list off all users -->
+<table id="table" class="table-qa">
+    <thead>
+        <tr>
+            <th onclick="sortTable(0)">Username<span class="arrow"></th>
+            <th onclick="sortTable(1)">First Name<span class="arrow"></th>
+            <th onclick="sortTable(2)">Last Name<span class="arrow"></th>
+            <th onclick="sortTable(3)">Email<span class="arrow"></th>
+            <th onclick="sortTable(4)">Role<span class="arrow"></th>
+            <th id="flagged-table-header" onclick="sortTable(6)">Flagged<span class="arrow"></th>
+            <th class="noSort">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var qa in Model)
+        {
+            if (@qa.isActive)
+            {
+                <tr>
+                    <td>@qa.Username</td>
+                    <td>@qa.FirstName</td>
+                    <td>@qa.LastName</td>
+                    <td>@qa.Email</td>
+                    <td>@qa.Role</td>
+                    <td id="flagged-table-data">@if (qa.isFlagged) 
+                        {
+                            <img id="flag-icon" src="~/images/flag.png" alt="flagged" />
+                        }
+                        else
+                        {
+
+                        }
+                    </td>
+                    <td>
+                        @if (userRole != "Coordinator") { @*Check that the user is not a coordinator. Coordinators should not be able to edit a user*@
+                            <a class="buttons" asp-area="" asp-controller="User" asp-action="EditUser" asp-route-Id="@qa.Id">Edit</a>
+                        }
+                        @*<button class="buttons" onclick="flagAccount(@qa.Id)">Flag</button>*@
+                        <button id="flag-account-button" class="buttons" onclick="openConfirmationDialog(event, @qa.Id)">Flag</button>
+                        <button id="description-button" class="buttons" onclick="showAccountsDetailsModal('@qa.CreatedAt', '@qa.startDate', '@qa.LastLogin')">
+                            <img id="description-icon" src="~/images/descriptionIconWhite.png" alt="Details" />
+                        </button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<!-- Modal Popup for details -->
+<dialog id="dialog-account-details" class="dialog-popups">
+	<div class="confirmation-content">
+        <div class="form-group">
+            <label class="popup-labels">Created At</label>
+            <p id='created-at-output'></p>
+        </div>
+        <div class="form-group">
+            <label class="popup-labels">Start Date</label>
+            <p id='start-date-output'></p>
+        </div>
+        <div class="form-group">
+            <label class="popup-labels">Last Login</label>
+            <p id='last-login-output'></p>
+        </div>
+        <!-- Confirmation button container -->
+        <div class="confirmation-buttons">
+            <!-- Confirmation buttons. Yes will call confirmDelete which will trigger 
+            the deleteButton input. No will close the confirmation dialog -->
+            <button class="buttons" onclick="closeAccountDetailsModal();">Close</button>
+        </div>
+    </div>
+	<button onclick="closeAccountDetailsModal();" class="x">❌</button>
+</dialog>
+
+<dialog id="dialog" class="dialog-popups">
+	<div class="confirmation-content">
+        <!-- Confirmation text -->
+        <p>Enter the reason you are flagging this account</p>
+        <!-- Confirmation button container -->
+        <div class="description-area">
+            <textarea id="flag-description"></textarea>
+        </div>
+        <div class="confirmation-buttons">
+            <button id="confirm-flag-account-button" class="buttons" onclick="flagAccount()">Confirm</button> 
+            <button id="cancel-flag-account-button" class="buttons buttons-accent" onclick="document.getElementById('dialog').close();">Cancel</button>
+        </div>
+    </div>
+    <button onclick="document.getElementById('dialog').close();" class="x">❌</button>
+</dialog>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    // Highlight the current page's link
+    var geekAccountsLink = document.getElementById('geek-accounts-link'); 
+    geekAccountsLink.classList.toggle('highlight-link');
+
+    // Change the color of the button that brings you to this page
+        var thisPageButton = document.getElementById('geek-accounts-button');
+        thisPageButton.classList.toggle('button-for-current-page');
+    });
+
+    function flagAccount() {
+    var userId = document.getElementById('id-input').value;
+    var flagDescription = document.getElementById('flag-description').value;
+
+    console.log(userId);
+
+    fetch(`/User/FlagAccount?id=${userId}&flagDescription=${flagDescription}`, {
+        method: 'POST'
+    }).then(response => {
+        if (response.ok) {
+            // Handle success if needed
+            location.reload(); // Refresh the page or update UI
+        } else {
+            // Handle error if needed
+        }
+    });
+    }
+
+    function unflagAccount(userId) {
+    fetch(`/User/UnflagAccount?id=${userId}`, {
+        method: 'POST'
+    }).then(response => {
+        if (response.ok) {
+            // Handle success if needed
+            location.reload(); // Refresh the page or update UI
+        } else {
+            // Handle error if needed
+        }
+    });
+    }
+
+    // Function called by the delete button to open confirmation modal
+    function openConfirmationDialog(event, id) {
+        event.preventDefault(); // Prevent default behavior
+        
+        var idInput = document.createElement('input');
+        idInput.setAttribute('id', 'id-input');
+        idInput.setAttribute('type', 'hidden');
+        idInput.setAttribute('value', id);
+
+        document.body.appendChild(idInput);
+        
+        // Show the modal
+        window.dialog.showModal();
+    }
+
+    function showAccountsDetailsModal(createdAt, startDate, lastLogin) {
+        const dialogDetails = document.getElementById('dialog-account-details');
+
+            var createdAtOutput = document.getElementById('created-at-output');
+            var startDateOutput = document.getElementById('start-date-output');
+            var lastLoginOutput = document.getElementById('last-login-output');
+
+            createdAtOutput.textContent = createdAt;
+            startDateOutput.textContent = startDate;
+            lastLoginOutput.textContent = lastLogin;
+
+            dialogDetails.showModal();
+    }
+
+    function closeAccountDetailsModal() {
+            document.getElementById('dialog-account-details').close();
+        }
+</script>
